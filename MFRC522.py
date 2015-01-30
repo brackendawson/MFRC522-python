@@ -328,6 +328,12 @@ class MFRC522:
 
     # Return the status
     return status
+
+  def Auth_Block(self, authMode, BlockAddr, SectorKey, serNum):
+    return self.MFRC522_Auth(authMode, BlockAddr, SectorKey, serNum)
+
+  def Auth_Sector(self, authMode, SectorAddr, SectorKey, serNum):
+    return self.MFRC522_Auth(authMode, SectorAddr * 4, SectorKey, serNum)
   
   def MFRC522_StopCrypto1(self):
     self.ClearBitMask(self.Status2Reg, 0x08)
@@ -345,7 +351,31 @@ class MFRC522:
     i = 0
     if len(backData) == 16:
       print "Sector "+str(blockAddr)+" "+str(backData)
+
+  def Read_Block(self, blockAddr):
+    recvData = []
+    recvData.append(self.PICC_READ)
+    recvData.append(blockAddr)
+    pOut = self.CalulateCRC(recvData)
+    recvData.append(pOut[0])
+    recvData.append(pOut[1])
+    (status, backData, backLen) = self.MFRC522_ToCard(self.PCD_TRANSCEIVE, recvData)
+    if len(backData) == 16:
+      return status, backData
+    else:
+      return self.MI_ERR, backData
   
+  def Read_Sector(self, sectorAddr):
+    recvSector = []
+    for block in range(4):
+      blockAddr = (sectorAddr * 4) + block
+      (status, recvBlock) = self.Read_Block(blockAddr)
+      if status != self.MI_OK:
+        return status, recvSector
+      recvSector = recvSector + recvBlock
+    return self.MI_OK, recvSector
+   
+
   def MFRC522_Write(self, blockAddr, writeData):
     buff = []
     buff.append(self.PICC_WRITE)
