@@ -7,7 +7,7 @@ import signal
 import time
   
 class MFRC522:
-  NRSTPD = 22
+  NRSTPD = 25
   
   MAX_LEN = 16
   
@@ -113,8 +113,8 @@ class MFRC522:
 
     global pi
     pi = GPIO.pi() 
-    pi.set_mode(22, GPIO.OUTPUT)
-    pi.write(22, 1)
+    pi.set_mode(self.NRSTPD, GPIO.OUTPUT)
+    pi.write(self.NRSTPD, 1)
     
     self.MFRC522_Init()
   
@@ -440,7 +440,7 @@ class MFRC522:
         i = i+1
 
   def MFRC522_Init(self):
-    pi.write(22, 1)
+    pi.write(self.NRSTPD, 1)
   
     self.MFRC522_Reset();
     
