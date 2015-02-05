@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-import sys, MFRC522
+import sys, MFRC522, printdat
 
 nfc = MFRC522.MFRC522()
 key = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
@@ -20,14 +20,15 @@ print "Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[
 print uid
 nfc.MFRC522_SelectTag(uid)
 
-for x in range(16):
-  status = nfc.Auth_Sector(nfc.PICC_AUTHENT1A, x, key, uid)
+for x in range(64):
+  status = nfc.Auth_Block(nfc.PICC_AUTHENT1A, x, key, uid)
   if status != nfc.MI_OK:
     print "Authentication error"
     sys.exit()
-  (status, data) = nfc.Read_Sector(x)
+  (status, data) = nfc.Read_Block(x)
   if status == nfc.MI_OK:
-    print data
+    sys.stdout.write('%02d: ' % x)
+    printdat.printdat(data)
   else:
     print "Read error"
     sys.exit()

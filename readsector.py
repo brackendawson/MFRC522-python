@@ -1,14 +1,14 @@
 #!/usr/bin/env python2
 
-import sys, MFRC522
+import sys, MFRC522, printdat
 
 nfc = MFRC522.MFRC522()
 #key = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
-#key = [0x65,0x6B,0x20,0x79,0x00,0x61] # key a
-key = [0x65,0x6B,0x20,0x79,0x00,0x62] # key b
+key = [0x6B,0x65,0x79,0x20,0x61,0x00] # key a
+#key = [0x6B,0x65,0x79,0x20,0x62,0x00] # key b
 
-#keyid = nfc.PICC_AUTHENT1A
-keyid = nfc.PICC_AUTHENT1B
+keyid = nfc.PICC_AUTHENT1A
+#keyid = nfc.PICC_AUTHENT1B
 
 sector = 1
 
@@ -33,7 +33,7 @@ if status != nfc.MI_OK:
   sys.exit()
 (status, data) = nfc.Read_Sector(sector)
 if status == nfc.MI_OK:
-  print data
+  printdat.printdat(data)
 else:
   print "Read error"
   sys.exit()
