@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-import pigpio as GPIO
 import spi
 import signal
 import time
   
 class MFRC522:
-  NRSTPD = 25
+  NRSTPD = 22
   
   MAX_LEN = 16
   
@@ -111,10 +110,8 @@ class MFRC522:
   def __init__(self, dev='/dev/spidev0.0', spd=1000000):
     spi.openSPI(device=dev,speed=spd)
 
-    global pi
-    pi = GPIO.pi() 
-    pi.set_mode(self.NRSTPD, GPIO.OUTPUT)
-    pi.write(self.NRSTPD, 1)
+    set_pi_pin_mode(self.NRSTPD, 'out')
+    write_pi_pin(self.NRSTPD, 1)
     
     self.MFRC522_Init()
   
@@ -440,7 +437,7 @@ class MFRC522:
         i = i+1
 
   def MFRC522_Init(self):
-    pi.write(self.NRSTPD, 1)
+    write_pi_pin(self.NRSTPD, 1)
   
     self.MFRC522_Reset();
     
@@ -453,3 +450,21 @@ class MFRC522:
     self.Write_MFRC522(self.TxAutoReg, 0x40)
     self.Write_MFRC522(self.ModeReg, 0x3D)
     self.AntennaOn()
+
+def set_pi_pin_mode(pin, mode):
+  fexp = open('/sys/class/gpio/export', 'w')
+  fexp.write(str(pin));
+  try:
+    fexp.close()
+  except IOError:
+    #this file has dodgy characteristics
+    del fexp
+
+  fdir = open('/sys/class/gpio/gpio' + str(pin) + '/direction', 'w')
+  fdir.write(mode)
+  fdir.close()
+
+def write_pi_pin(pin, val):
+  fval = open('/sys/class/gpio/gpio' + str(pin) + '/value', 'w')
+  fval.write(str(val))
+  fval.close()
