@@ -448,16 +448,21 @@ class MFRC522:
 
 def set_pi_pin_mode(pin, mode):
   fexp = open('/sys/class/gpio/export', 'w')
-  fexp.write(str(pin));
+  fexp.write(str(pin))
   try:
     fexp.close()
   except IOError:
-    #this file has dodgy characteristics
     del fexp
-
-  fdir = open('/sys/class/gpio/gpio' + str(pin) + '/direction', 'w')
-  fdir.write(mode)
-  fdir.close()
+  attempts = 0
+  while True:
+    try:
+      fdir = open('/sys/class/gpio/gpio' + str(pin) + '/direction', 'w')
+      fdir.write(mode)
+      fdir.close()
+      break
+    except IOError:
+      if attempts > 10:
+        raise
 
 def write_pi_pin(pin, val):
   fval = open('/sys/class/gpio/gpio' + str(pin) + '/value', 'w')
