@@ -6,7 +6,7 @@ import signal
 import time
   
 class MFRC522:
-  NRSTPD = 22
+  NRSTPD = 25
   
   MAX_LEN = 16
   
@@ -115,6 +115,9 @@ class MFRC522:
     
     self.MFRC522_Init()
   
+  def __del__(self):
+    release_pi_pin(self.NRSTPD)
+
   def MFRC522_Reset(self):
     self.Write_MFRC522(self.CommandReg, self.PCD_RESETPHASE)
   
@@ -464,6 +467,14 @@ def set_pi_pin_mode(pin, mode):
     except IOError:
       if attempts > 10:
         raise
+
+def release_pi_pin(pin):
+    fexp = open('/sys/class/gpio/unexport', 'w')
+    fexp.write(str(pin))
+    try:
+        fexp.close()
+    except IOError:
+        del fexp
 
 def write_pi_pin(pin, val):
   fval = open('/sys/class/gpio/gpio' + str(pin) + '/value', 'w')
