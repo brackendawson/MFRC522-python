@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-import spi
+import spidev
 import signal
 import time
   
@@ -105,10 +105,12 @@ class MFRC522:
   Reserved34      = 0x3F
     
   serNum = []
+  spi = None
  
- 
-  def __init__(self, dev='/dev/spidev0.0', spd=1000000):
-    spi.openSPI(device=dev,speed=spd)
+  def __init__(self, port=0, dev=0, spd=1000000):
+    self.spi = spidev.SpiDev()
+    #self.spi.max_speed_hz = spd
+    self.spi.open(port, dev)
 
     set_pi_pin_mode(self.NRSTPD, 'out')
     write_pi_pin(self.NRSTPD, 1)
@@ -122,10 +124,10 @@ class MFRC522:
     self.Write_MFRC522(self.CommandReg, self.PCD_RESETPHASE)
   
   def Write_MFRC522(self, addr, val):
-    spi.transfer(((addr<<1)&0x7E,val))
+    self.spi.xfer([(addr<<1)&0x7E,val])
   
   def Read_MFRC522(self, addr):
-    val = spi.transfer((((addr<<1)&0x7E) | 0x80,0))
+    val = self.spi.xfer([((addr<<1)&0x7E) | 0x80,0])
     return val[1]
   
   def SetBitMask(self, reg, mask):
@@ -468,6 +470,7 @@ def set_pi_pin_mode(pin, mode):
     except IOError:
       if attempts > 10:
         raise
+      time.sleep(0.1)
 
 def release_pi_pin(pin):
     fexp = open('/sys/class/gpio/unexport', 'w')
