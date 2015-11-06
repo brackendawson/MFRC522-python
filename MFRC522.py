@@ -2,6 +2,7 @@
 # -*- coding: utf8 -*-
 
 import spidev
+import RPi.GPIO as gpio
 import signal
 import time
 
@@ -112,13 +113,14 @@ class MFRC522:
     #self.spi.max_speed_hz = spd
     self.spi.open(port, dev)
 
-    set_pi_pin_mode(self.NRSTPD, 'out')
-    write_pi_pin(self.NRSTPD, 1)
+    gpio.setmode(gpio.BOARD)
+    gpio.setup(self.NRSTPD, gpio.OUT)
+    gpio.output(self.NRSTPD, gpio.HIGH)
 
     self.MFRC522_Init()
 
   def __del__(self):
-    release_pi_pin(self.NRSTPD)
+    gpio.cleanup()
 
   def MFRC522_Reset(self):
     self.Write_MFRC522(self.CommandReg, self.PCD_RESETPHASE)
@@ -438,7 +440,7 @@ class MFRC522:
         i = i+1
 
   def MFRC522_Init(self):
-    write_pi_pin(self.NRSTPD, 1)
+    gpio.output(self.NRSTPD, gpio.HIGH)
 
     self.MFRC522_Reset();
 
@@ -451,36 +453,3 @@ class MFRC522:
     self.Write_MFRC522(self.TxAutoReg, 0x40)
     self.Write_MFRC522(self.ModeReg, 0x3D)
     self.AntennaOn()
-
-def set_pi_pin_mode(pin, mode):
-  fexp = open('/sys/class/gpio/export', 'w')
-  fexp.write(str(pin))
-  try:
-    fexp.close()
-  except IOError:
-    del fexp
-  attempts = 0
-  while True:
-    attempts += 1
-    try:
-      fdir = open('/sys/class/gpio/gpio' + str(pin) + '/direction', 'w')
-      fdir.write(mode)
-      fdir.close()
-      break
-    except IOError:
-      if attempts > 10:
-        raise
-      time.sleep(0.1)
-
-def release_pi_pin(pin):
-    fexp = open('/sys/class/gpio/unexport', 'w')
-    fexp.write(str(pin))
-    try:
-        fexp.close()
-    except IOError:
-        del fexp
-
-def write_pi_pin(pin, val):
-  fval = open('/sys/class/gpio/gpio' + str(pin) + '/value', 'w')
-  fval.write(str(val))
-  fval.close()
